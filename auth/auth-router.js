@@ -11,9 +11,9 @@ router.post("/register", (req, res) => {
   userInfo.password = hash;
   db.add(userInfo)
     .then(users => {
-      res.json(users);
+      res.status(200).json(users);
     })
-    .catch(err => res.send(err.message));
+    .catch(err => res.status(500).json(err.message));
 });
 
 router.post("/login", (req, res) => {
