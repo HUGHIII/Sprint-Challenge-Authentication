@@ -8,6 +8,7 @@ const { jwtSecret } = require("./secret");
 
 module.exports = (req, res, next) => {
   const { authorization } = req.headers;
+  console.log(req.headers, "header from auth");
 
   if (authorization) {
     jwt.verify(authorization, jwtSecret, (err, decodedToken) => {
