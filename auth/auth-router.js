@@ -1,35 +1,42 @@
 const router = require("express").Router();
 const bcrypt = require("bcryptjs");
-const db = require("./users-model");
+const Users = require("./users-model");
+const { generateToken } = require("./genToken");
 
 router.post("/register", (req, res) => {
-  // implement registration
-  const userInfo = req.body;
-  const ROUNDS = process.env.HASHING_ROUNDS || 8;
-  const hash = bcrypt.hashSync(userInfo.password, ROUNDS);
+  let user = req.body;
+  const hash = bcrypt.hashSync(user.password, 8);
+  user.password = hash;
+  console.log(req.body, "req from register");
 
-  userInfo.password = hash;
-  db.add(userInfo)
-    .then(users => {
-      res.status(200).json(users);
+  Users.add(user)
+    .then((saved) => {
+      res.status(201).json(saved);
     })
-    .catch(err => res.status(500).json(err.message));
+    .catch((error) => {
+      res.status(500).json(console.log(error));
+    });
 });
 
 router.post("/login", (req, res) => {
-  const { username, password } = req.body;
+  let { username, password } = req.body;
 
-  db.findBy({ username })
-    .then(([user]) => {
+  Users.findBy({ username })
+    .first()
+    .then((user) => {
       if (user && bcrypt.compareSync(password, user.password)) {
-        req.session.user = user;
-        res.status(200).json({ message: "welcome to dumb jokes.com, oof" });
+        const token = generateToken(user);
+        res.status(200).json({
+          message: `Welcome ${user.username}!`,
+          token,
+        });
       } else {
-        res.status(401).json({ message: "invalid credentials" });
+        res.status(401).json({ message: "Invalid Credentials" });
       }
     })
-    .catch(err => {
-      res.status(500).json({ errorMessage: "error finding the user" });
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json(error);
     });
 });
 
